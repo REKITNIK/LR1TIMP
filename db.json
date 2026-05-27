@@ -1,0 +1,31 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "Анна Иванова",
+      "email": "anna@hospital.ru",
+      "password": "admin123",
+      "role": "admin",
+      "isApproved": true,
+      "position": "Главный врач",
+      "department": "Администрация",
+      "phone": "+7 (999) 123-45-67",
+      "avatar": "👩‍⚕️",
+      "createdAt": "2024-01-01T10:00:00.000Z"
+    },
+    {
+      "id": "2",
+      "name": "Сергей Петров",
+      "email": "sergey@hospital.ru",
+      "password": "doctor123",
+      "role": "doctor",
+      "isApproved": true,
+      "position": "Врач-терапевт",
+      "department": "Терапия",
+      "phone": "+7 (999) 234-56-78",
+      "avatar": "👨‍⚕️",
+      "createdAt": "2024-01-02T10:00:00.000Z"
+    }
+  ],
+  "pendingUsers": []
+}

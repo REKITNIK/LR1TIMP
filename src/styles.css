@@ -1,0 +1,406 @@
+/* ===== Общие стили и переменные ===== */
+:root {
+  --primary: #0ea5e9;
+  --primary-dark: #0284c7;
+  --primary-light: #e0f2fe;
+  --secondary: #10b981;
+  --danger: #ef4444;
+  --danger-dark: #dc2626;
+  --warning: #f59e0b;
+  --dark: #1e293b;
+  --gray: #64748b;
+  --gray-light: #94a3b8;
+  --gray-bg: #f8fafc;
+  --white: #ffffff;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e6f2f5 100%);
+  min-height: 100vh;
+  color: var(--dark);
+  line-height: 1.5;
+}
+
+/* ===== Контейнеры и layout ===== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* Карточки */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* ===== Заголовки ===== */
+h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-left: 4px solid var(--primary);
+  padding-left: 1rem;
+}
+
+h1::before {
+  content: "🏥";
+  font-size: 1.75rem;
+}
+
+/* ===== Список сотрудников (Home.js) ===== */
+.employees-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.employee-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(14, 165, 233, 0.1);
+}
+
+.employee-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+  border-color: var(--primary-light);
+}
+
+.employee-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.employee-name {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--dark);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.employee-name::before {
+  content: "👨‍⚕️";
+  font-size: 1.2rem;
+}
+
+.employee-rang {
+  font-size: 0.875rem;
+  color: var(--gray);
+  background: var(--gray-bg);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.employee-id {
+  font-size: 0.7rem;
+  color: var(--gray-light);
+  font-family: monospace;
+}
+
+.employee-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  color: var(--gray-light);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.delete-btn:hover {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.delete-btn::before {
+  content: "🗑️";
+}
+
+.add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 40px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+  margin-top: 1rem;
+}
+
+.add-button:hover {
+  background: var(--primary-dark);
+  transform: scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+.add-button::before {
+  content: "+";
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Пустое состояние */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  background: var(--white);
+  border-radius: var(--radius);
+  color: var(--gray);
+}
+
+.empty-state::before {
+  content: "👩‍⚕️🧑‍⚕️";
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* ===== Формы (Form.js, Detail.js) ===== */
+.form-container {
+  max-width: 600px;
+  margin: 0 auto;
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--dark);
+  font-size: 0.9rem;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  color: var(--gray-light);
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: var(--white);
+  font-family: inherit;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+input:hover, select:hover {
+  border-color: var(--gray-light);
+}
+
+/* Кнопки форм */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  font-size: 1rem;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--gray-bg);
+  color: var(--gray);
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  text-align: center;
+  display: inline-block;
+}
+
+.btn-secondary:hover {
+  background: #f1f5f9;
+  color: var(--dark);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+  background: var(--danger-dark);
+}
+
+/* ===== Адаптивность ===== */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  .employees-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .employee-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .delete-btn {
+    align-self: flex-end;
+  }
+}
+
+/* ===== Анимации ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.employee-card, .form-container {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ===== Бейджи и статусы ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-primary {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+/* ===== Навигация (если есть) ===== */
+.nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  transition: gap 0.2s ease;
+}
+
+.nav-back:hover {
+  gap: 0.75rem;
+}

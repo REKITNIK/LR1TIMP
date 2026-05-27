@@ -1,0 +1,34 @@
+# /var/www/medical-system/build/.htaccess
+# Дополнительные настройки для React Router
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Не применять rewrite к реальным файлам
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Все запросы на index.html
+    RewriteRule . /index.html [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Кеширование статики
+    <FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|js|css|swf|svg|woff|woff2)$">
+        Header set Cache-Control "max-age=31536000, public"
+    </FilesMatch>
+    
+    # Безопасность
+    Header set X-Frame-Options "DENY"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Сжатие
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# Защита от просмотра директорий
+Options -Indexes
