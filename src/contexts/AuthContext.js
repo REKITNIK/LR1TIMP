@@ -1,5 +1,7 @@
+// src/contexts/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 const AuthContext = createContext();
 
@@ -11,98 +13,56 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-    
-    if (storedUser && storedToken) {
+    if (token && storedUser) {
       setUser(JSON.parse(storedUser));
+      // Устанавливаем заголовок для всех будущих запросов
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
     setLoading(false);
   }, []);
 
-  // Регистрация (требует подтверждения)
-  const register = async (userData) => {
-    try {
-      setError(null);
-      
-      // Проверка существующего email в users
-      const existingUsers = await axios.get('http://localhost:5000/users');
-      const userExists = existingUsers.data.find(u => u.email === userData.email);
-      
-      // Проверка в ожидающих
-      const pendingUsers = await axios.get('http://localhost:5000/pendingUsers');
-      const pendingExists = pendingUsers.data.find(u => u.email === userData.email);
-      
-      if (userExists || pendingExists) {
-        throw new Error('Пользователь с таким email уже существует');
-      }
-      
-      // Создание заявки на регистрацию
-      const newPendingUser = {
-        ...userData,
-        role: 'employee',
-        isApproved: false,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
-      
-      await axios.post('http://localhost:5000/pendingUsers', newPendingUser);
-      
-      return { 
-        success: true, 
-        message: 'Регистрация отправлена на подтверждение администратору' 
-      };
-    } catch (error) {
-      setError(error.message);
-      return { success: false, error: error.message };
-    }
-  };
-
-  // Вход в систему (только для подтвержденных)
   const login = async (email, password) => {
     try {
       setError(null);
-      
-      const response = await axios.get('http://localhost:5000/users');
-      const users = response.data;
-      
-      const foundUser = users.find(u => u.email === email && u.password === password);
-      
-      if (!foundUser) {
-        throw new Error('Неверный email или пароль');
-      }
-      
-      if (!foundUser.isApproved) {
-        throw new Error('Ваша учетная запись еще не подтверждена администратором');
-      }
-      
-      const { password: _, ...userWithoutPassword } = foundUser;
-      const token = btoa(`${foundUser.id}:${Date.now()}`);
-      
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+      const response = await axios.post(`${API_BASE_URL}/login`, { email, password });
+      const { token, user: userData } = response.data;
       localStorage.setItem('token', token);
-      setUser(userWithoutPassword);
-      
+      localStorage.setItem('user', JSON.stringify(userData));
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(userData);
       return { success: true };
     } catch (error) {
-      setError(error.message);
-      return { success: false, error: error.message };
+      const msg = error.response?.data?.error || error.message;
+      setError(msg);
+      return { success: false, error: msg };
+    }
+  };
+
+  const register = async (userData) => {
+    // Регистрация через /pendingUsers
+    try {
+      setError(null);
+      const response = await axios.post(`${API_BASE_URL}/pendingUsers`, userData);
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      const msg = error.response?.data?.error || error.message;
+      setError(msg);
+      return { success: false, error: msg };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete axios.defaults.headers.common['Authorization'];
     setUser(null);
+    window.location.href = '/login';
   };
 
-  const isAdmin = () => {
-    return user?.role === 'admin';
-  };
-
-  const isAuthenticated = () => {
-    return !!user;
-  };
+  const isAdmin = () => user?.role === 'admin';
+  const isAuthenticated = () => !!user;
 
   const value = {
     user,

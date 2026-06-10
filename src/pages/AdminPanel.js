@@ -1,7 +1,10 @@
+// src/pages/AdminPanel.js
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';   // <- импортируем наш инстанс
 import { useAuth } from '../contexts/AuthContext';
+import API_BASE_URL from '../config';
+
 
 const AdminPanel = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
@@ -9,17 +12,19 @@ const AdminPanel = () => {
   const [error, setError] = useState('');
   const { user } = useAuth();
 
+
+
   const loadPendingUsers = async () => {
     try {
       setLoading(true);
       setError('');
       console.log('Загрузка заявок...');
-      const response = await axios.get('http://localhost:5000/pendingUsers');
+      const response = await api.get(`${API_BASE_URL}/pendingUsers`);
       console.log('Полученные заявки:', response.data);
       setPendingUsers(response.data);
     } catch (error) {
       console.error('Ошибка загрузки заявок:', error);
-      setError('Не удалось загрузить заявки. Убедитесь, что JSON Server запущен.');
+      setError('Не удалось загрузить заявки');
     } finally {
       setLoading(false);
     }
@@ -27,50 +32,49 @@ const AdminPanel = () => {
 
   useEffect(() => {
     loadPendingUsers();
-    // Обновляем список каждые 5 секунд
-    const interval = setInterval(loadPendingUsers, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const approveUser = async (pendingUser) => {
     try {
-      // Создаем пользователя в основной таблице
+      console.log('Подтверждение пользователя:', pendingUser);
+      
+      // Создаем пользователя в таблице users
       const newUser = {
         name: pendingUser.name,
         email: pendingUser.email,
         password: pendingUser.password,
         role: pendingUser.role || 'employee',
-        isApproved: true,
-        position: pendingUser.position,
-        department: pendingUser.department,
+        isapproved: true,
+        position: pendingUser.position || 'Не указана',
+        department: pendingUser.department || 'Не указано',
         phone: pendingUser.phone || '',
-        avatar: pendingUser.avatar,
-        createdAt: pendingUser.createdAt,
-        approvedAt: new Date().toISOString(),
-        approvedBy: user.id
+        avatar: pendingUser.avatar || pendingUser.name?.charAt(0) || '👤',
+        createdAt: new Date().toISOString()
       };
-
+      
       console.log('Создание пользователя:', newUser);
-      await axios.post('http://localhost:5000/users', newUser);
+      const createResponse = await api.post(`${API_BASE_URL}/users`, newUser);
+      console.log('Пользователь создан:', createResponse.data);
       
-      // Удаляем из заявок
-      console.log('Удаление заявки:', pendingUser.id);
-      await axios.delete(`http://localhost:5000/pendingUsers/${pendingUser.id}`);
+      // Удаляем заявку
+      console.log('Удаление заявки ID:', pendingUser.id);
+      await api.delete(`${API_BASE_URL}/pendingUsers/${pendingUser.id}`);
       
-      // Обновляем список
+      // Обновляем список заявок
       await loadPendingUsers();
       
       alert(`Пользователь ${pendingUser.name} успешно подтвержден!`);
     } catch (error) {
       console.error('Ошибка подтверждения:', error);
-      alert('Ошибка при подтверждении пользователя: ' + (error.response?.data || error.message));
+      alert(`Ошибка при подтверждении: ${error.response?.data?.error || error.message}`);
     }
   };
 
   const rejectUser = async (pendingUser) => {
     if (window.confirm(`Отклонить заявку от ${pendingUser.name}?`)) {
       try {
-        await axios.delete(`http://localhost:5000/pendingUsers/${pendingUser.id}`);
+        console.log('Отклонение заявки ID:', pendingUser.id);
+        await api.delete(`${API_BASE_URL}/pendingUsers/${pendingUser.id}`);
         await loadPendingUsers();
         alert(`Заявка от ${pendingUser.name} отклонена`);
       } catch (error) {
@@ -80,11 +84,10 @@ const AdminPanel = () => {
     }
   };
 
-  if (loading && pendingUsers.length === 0) {
+  if (loading) {
     return (
       <div className="container">
         <div className="empty-state">
-          <div className="loading-spinner"></div>
           <p>Загрузка заявок...</p>
         </div>
       </div>
@@ -101,74 +104,63 @@ const AdminPanel = () => {
         </div>
         
         {error && (
-          <div className="error-message" style={{ marginBottom: '20px' }}>
-            {error}
+          <div className="error-message" style={{ marginBottom: '20px', padding: '10px', background: '#fee', borderRadius: '8px' }}>
+            ❌ {error}
           </div>
         )}
         
-        <div className="admin-section">
-          <h2>📋 Заявки на регистрацию ({pendingUsers.length})</h2>
-          
-          {pendingUsers.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">✅</div>
-              <p>Нет новых заявок на регистрацию</p>
-              <p style={{ fontSize: '12px', marginTop: '10px' }}>
-                Когда кто-то зарегистрируется, заявка появится здесь
-              </p>
-            </div>
-          ) : (
-            <div className="pending-users-grid">
-              {pendingUsers.map(pending => (
-                <div key={pending.id} className="pending-card">
-                  <div className="pending-header">
-                    <div className="pending-avatar">
-                      {pending.avatar || pending.name.charAt(0)}
-                    </div>
-                    <div className="pending-info">
-                      <h3>{pending.name}</h3>
-                      <p className="pending-email">{pending.email}</p>
-                    </div>
+        <h2>📋 Заявки на регистрацию ({pendingUsers.length})</h2>
+        
+        {pendingUsers.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">✅</div>
+            <p>Нет новых заявок на регистрацию</p>
+          </div>
+        ) : (
+          <div className="pending-users-grid">
+            {pendingUsers.map(pending => (
+              <div key={pending.id} className="pending-card">
+                <div className="pending-header">
+                  <div className="pending-avatar">
+                    {pending.avatar || pending.name?.charAt(0) || '👤'}
                   </div>
-                  
-                  <div className="pending-details">
-                    <div className="detail-row">
-                      <span className="label">Должность:</span>
-                      <span>{pending.position}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="label">Отделение:</span>
-                      <span>{pending.department}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="label">Телефон:</span>
-                      <span>{pending.phone || 'Не указан'}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="label">Дата заявки:</span>
-                      <span>{new Date(pending.createdAt).toLocaleString()}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="pending-actions">
-                    <button 
-                      onClick={() => approveUser(pending)} 
-                      className="btn-approve"
-                    >
-                      ✅ Подтвердить
-                    </button>
-                    <button 
-                      onClick={() => rejectUser(pending)} 
-                      className="btn-reject"
-                    >
-                      ❌ Отклонить
-                    </button>
+                  <div className="pending-info">
+                    <h3>{pending.name}</h3>
+                    <p className="pending-email">{pending.email}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                
+                <div className="pending-details">
+                  <div className="detail-row">
+                    <span className="label">Должность:</span>
+                    <span>{pending.position || 'Не указана'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">Отделение:</span>
+                    <span>{pending.department || 'Не указано'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">Телефон:</span>
+                    <span>{pending.phone || 'Не указан'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">Дата заявки:</span>
+                    <span>{pending.createdAt ? new Date(pending.createdAt).toLocaleString() : 'Не указана'}</span>
+                  </div>
+                </div>
+                
+                <div className="pending-actions">
+                  <button onClick={() => approveUser(pending)} className="btn-approve">
+                    ✅ Подтвердить
+                  </button>
+                  <button onClick={() => rejectUser(pending)} className="btn-reject">
+                    ❌ Отклонить
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

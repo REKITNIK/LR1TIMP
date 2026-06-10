@@ -1,3 +1,4 @@
+// src/pages/Register.js - исправленная версия
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -77,8 +78,10 @@ const Register = () => {
       avatar: formData.name.charAt(0)
     });
     
-    if (result.success) {
-      setSuccessMessage(result.message);
+    console.log('Результат регистрации:', result);
+    
+    if (result && result.success) {
+      setSuccessMessage(result.message || 'Регистрация успешно отправлена!');
       // Очищаем форму
       setFormData({
         name: '',
@@ -94,7 +97,9 @@ const Register = () => {
         navigate('/login');
       }, 3000);
     } else {
-      setErrors({ general: result.error });
+      // Показываем ошибку
+      const errorMsg = result?.error || 'Ошибка при регистрации';
+      setErrors({ general: errorMsg });
     }
     
     setLoading(false);
@@ -130,38 +135,36 @@ const Register = () => {
         </div>
         
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-row">
-            <div className="form-group">
-              <label>ФИО *</label>
-              <div className="input-wrapper">
-                <span className="input-icon">👤</span>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  placeholder="Иванова Анна Петровна"
-                />
-              </div>
-              {errors.name && <div className="error-message">{errors.name}</div>}
+          <div className="form-group">
+            <label>ФИО *</label>
+            <div className="input-wrapper">
+              <span className="input-icon">👤</span>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                placeholder="Иванова Анна Петровна"
+              />
             </div>
-            
-            <div className="form-group">
-              <label>Email *</label>
-              <div className="input-wrapper">
-                <span className="input-icon">📧</span>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  placeholder="anna@hospital.ru"
-                />
-              </div>
-              {errors.email && <div className="error-message">{errors.email}</div>}
+            {errors.name && <div className="error-message">{errors.name}</div>}
+          </div>
+          
+          <div className="form-group">
+            <label>Email *</label>
+            <div className="input-wrapper">
+              <span className="input-icon">📧</span>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="anna@hospital.ru"
+              />
             </div>
+            {errors.email && <div className="error-message">{errors.email}</div>}
           </div>
           
           <div className="form-row">

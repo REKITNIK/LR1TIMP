@@ -1,4 +1,17 @@
 {
+  "devices": [
+    {
+      "id": "1",
+      "name": "МРТ Томограф Siemens",
+      "type": "medical",
+      "ipAddress": "192.168.1.101",
+      "macAddress": "00:1A:2B:3C:4D:5E",
+      "location": "Кабинет МРТ",
+      "status": "online",
+      "power": "on",
+      "lastSeen": "2026-06-02T10:30:00.000Z"
+    }
+  ],
   "users": [
     {
       "id": "1",
@@ -7,25 +20,9 @@
       "password": "admin123",
       "role": "admin",
       "isApproved": true,
-      "position": "Главный врач",
-      "department": "Администрация",
-      "phone": "+7 (999) 123-45-67",
-      "avatar": "👩‍⚕️",
-      "createdAt": "2024-01-01T10:00:00.000Z"
-    },
-    {
-      "id": "2",
-      "name": "Сергей Петров",
-      "email": "sergey@hospital.ru",
-      "password": "doctor123",
-      "role": "doctor",
-      "isApproved": true,
-      "position": "Врач-терапевт",
-      "department": "Терапия",
-      "phone": "+7 (999) 234-56-78",
-      "avatar": "👨‍⚕️",
-      "createdAt": "2024-01-02T10:00:00.000Z"
+      "createdAt": "2026-06-01T10:00:00.000Z"
     }
   ],
-  "pendingUsers": []
+  "pendingUsers": [],
+  "deviceLogs": []
 }

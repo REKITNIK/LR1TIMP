@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../config';
+
 
 const Profile = () => {
   const { user, logout } = useAuth();
@@ -22,12 +24,12 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-    const checkResponse = await axios.get(`http://localhost:5000/users/${user.id}`);
+    const checkResponse = await axios.get(`{API_BASE_URL}/users/${user.id}`);
     if (!checkResponse.data) {
       alert('Пользователь не найден');
       return;
     }
-	const response = await axios.patch(`http://localhost:5000/users/${user.id}`, formData);
+	const response = await axios.patch(`{API_BASE_URL}/users/${user.id}`, formData);
     
     if (response.status === 200) {
       alert('Данные обновлены');

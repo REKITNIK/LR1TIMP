@@ -1,9 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
+import API_BASE_URL from '../config';
+// ...
 
 const Detail = ({ employees, onUpdate, onDelete, availableRanks, currentUser, isAdmin }) => {
-  const { id } = useParams();
+  
+const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [employee, setEmployee] = useState(null);
@@ -17,22 +21,39 @@ const Detail = ({ employees, onUpdate, onDelete, availableRanks, currentUser, is
   const [rangError, setRangError] = useState('');
   const [touched, setTouched] = useState({ name: false, rang: false });
 
+  // Состояние для атрибутов врача
+  const [doctorAttributes, setDoctorAttributes] = useState({
+    specialization: '',
+    experience: '',
+    education: '',
+    qualification: '',
+    cabinet: '',
+    schedule: '',
+    patientsPerDay: '',
+    rating: '',
+    biography: '',
+    certificates: [],
+    languages: []
+  });
+
   // данные напрямую из API
   useEffect(() => {
     const loadEmployee = async () => {
       try {
         setLoading(true);
-        // поиск сотрудника в переданных пропсах
         let foundEmployee = employees?.find(emp => emp.id === parseInt(id));
         
-        // нет сотрудника? загружаем напрямую из API
         if (!foundEmployee) {
-          const response = await axios.get(`http://localhost:5000/users/${id}`);
+          const response = await axios.get(`${API_BASE_URL}/users/${id}`);
           foundEmployee = response.data;
         }
         
         if (foundEmployee) {
           setEmployee(foundEmployee);
+          // Загружаем атрибуты если есть
+          if (foundEmployee.doctorAttributes) {
+            setDoctorAttributes(foundEmployee.doctorAttributes);
+          }
         } else {
           setEmployee(null);
         }
@@ -101,48 +122,62 @@ const Detail = ({ employees, onUpdate, onDelete, availableRanks, currentUser, is
       setRangError(validateRang(rangRef.current?.value || ''));
     }
   };
-  
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (!isAdmin) {
-    alert('Только администратор может редактировать сотрудников');
-    return;
-  }
-  
-  setTouched({ name: true, rang: true });
-  
-  const name = nameRef.current?.value || '';
-  const rang = rangRef.current?.value || '';
-  
-  const nameValidationError = validateName(name);
-  const rangValidationError = validateRang(rang);
-  
-  setNameError(nameValidationError);
-  setRangError(rangValidationError);
-  
-  if (nameValidationError || rangValidationError) {
-    return;
-  }
-  
-  // Исправлено: сохраняем оба поля для совместимости
-  const updatedEmployee = {
-    ...employee,
-    name: name.trim(),
-    position: rang,
-    rang: rang  // Добавляем rang для старых записей
+
+  // Обработчик изменения атрибутов
+  const handleAttributeChange = (field, value) => {
+    setDoctorAttributes(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
   
-  const success = await onUpdate(employee.id, updatedEmployee);
-  
-  if (success) {
-    setEmployee(updatedEmployee);
-    setIsEditing(false);
-    setTouched({ name: false, rang: false });
-  } else {
-    alert('Ошибка при обновлении данных');
-  }
-};
+  // ЕДИНСТВЕННАЯ функция handleSubmit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!isAdmin) {
+      alert('Только администратор может редактировать сотрудников');
+      return;
+    }
+    
+    setTouched({ name: true, rang: true });
+    
+    const name = nameRef.current?.value || '';
+    const rang = rangRef.current?.value || '';
+    
+    const nameValidationError = validateName(name);
+    const rangValidationError = validateRang(rang);
+    
+    setNameError(nameValidationError);
+    setRangError(rangValidationError);
+    
+    if (nameValidationError || rangValidationError) {
+      return;
+    }
+    
+    // Формируем обновленные данные с атрибутами
+    const updatedEmployee = {
+      ...employee,
+      name: name.trim(),
+      position: rang,
+      rang: rang
+    };
+    
+    // Добавляем атрибуты только для врачей
+    if (employee.role === 'doctor') {
+      updatedEmployee.doctorAttributes = doctorAttributes;
+    }
+    
+    const success = await onUpdate(employee.id, updatedEmployee);
+    
+    if (success) {
+      setEmployee(updatedEmployee);
+      setIsEditing(false);
+      setTouched({ name: false, rang: false });
+    } else {
+      alert('Ошибка при обновлении данных');
+    }
+  };
   
   const handleCancel = () => {
     setIsEditing(false);
@@ -182,6 +217,190 @@ const Detail = ({ employees, onUpdate, onDelete, availableRanks, currentUser, is
       default: return 'Сотрудник';
     }
   };
+
+  // Компонент для отображения атрибутов врача
+  const DoctorAttributesView = ({ attributes }) => (
+    <div className="info-section">
+      <h3>Профессиональные данные</h3>
+      <div className="attributes-grid">
+        <div className="attribute-card">
+          <div className="attribute-label">🎯 Специализация</div>
+          <div className="attribute-value">{attributes.specialization || 'Не указана'}</div>
+        </div>
+        <div className="attribute-card">
+          <div className="attribute-label">⭐ Стаж (лет)</div>
+          <div className="attribute-value">{attributes.experience || 'Не указан'}</div>
+        </div>
+        <div className="attribute-card">
+          <div className="attribute-label">🎓 Образование</div>
+          <div className="attribute-value">{attributes.education || 'Не указано'}</div>
+        </div>
+        <div className="attribute-card">
+          <div className="attribute-label">📜 Квалификация</div>
+          <div className="attribute-value">{attributes.qualification || 'Не указана'}</div>
+        </div>
+        <div className="attribute-card">
+          <div className="attribute-label">🚪 Кабинет</div>
+          <div className="attribute-value">{attributes.cabinet || 'Не указан'}</div>
+        </div>
+        <div className="attribute-card">
+          <div className="attribute-label">📅 График работы</div>
+          <div className="attribute-value">{attributes.schedule || 'Не указан'}</div>
+        </div>
+        <div className="attribute-card">
+          <div className="attribute-label">👥 Пациентов в день</div>
+          <div className="attribute-value">{attributes.patientsPerDay || 'Не указано'}</div>
+        </div>
+        <div className="attribute-card">
+          <div className="attribute-label">⭐ Рейтинг</div>
+          <div className="attribute-value">
+            {'⭐'.repeat(Math.floor(attributes.rating || 0))} {attributes.rating || 'Не указан'}
+          </div>
+        </div>
+      </div>
+      {attributes.biography && (
+        <div className="attribute-card full-width">
+          <div className="attribute-label">📝 Биография</div>
+          <div className="attribute-value">{attributes.biography}</div>
+        </div>
+      )}
+      {attributes.certificates && attributes.certificates.length > 0 && (
+        <div className="attribute-card full-width">
+          <div className="attribute-label">📜 Сертификаты</div>
+          <div className="attribute-value">{attributes.certificates.join(', ')}</div>
+        </div>
+      )}
+      {attributes.languages && attributes.languages.length > 0 && (
+        <div className="attribute-card full-width">
+          <div className="attribute-label">🌐 Языки</div>
+          <div className="attribute-value">{attributes.languages.join(', ')}</div>
+        </div>
+      )}
+    </div>
+  );
+
+  // Компонент для редактирования атрибутов врача
+  const DoctorAttributesEdit = ({ attributes, onChange }) => (
+    <div className="info-section">
+      <h3>Профессиональные данные</h3>
+      
+      <div className="form-group">
+        <label>Специализация:</label>
+        <input
+          type="text"
+          value={attributes.specialization || ''}
+          onChange={(e) => onChange('specialization', e.target.value)}
+          placeholder="Например: Кардиология"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Стаж (лет):</label>
+        <input
+          type="number"
+          value={attributes.experience || ''}
+          onChange={(e) => onChange('experience', e.target.value)}
+          placeholder="Например: 10"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Образование:</label>
+        <input
+          type="text"
+          value={attributes.education || ''}
+          onChange={(e) => onChange('education', e.target.value)}
+          placeholder="ВУЗ, год окончания"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Квалификация:</label>
+        <select
+          value={attributes.qualification || ''}
+          onChange={(e) => onChange('qualification', e.target.value)}
+        >
+          <option value="">Выберите категорию</option>
+          <option value="Вторая категория">Вторая категория</option>
+          <option value="Первая категория">Первая категория</option>
+          <option value="Высшая категория">Высшая категория</option>
+        </select>
+      </div>
+      
+      <div className="form-group">
+        <label>Кабинет:</label>
+        <input
+          type="text"
+          value={attributes.cabinet || ''}
+          onChange={(e) => onChange('cabinet', e.target.value)}
+          placeholder="Номер кабинета"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>График работы:</label>
+        <input
+          type="text"
+          value={attributes.schedule || ''}
+          onChange={(e) => onChange('schedule', e.target.value)}
+          placeholder="ПН-ПТ 9:00-18:00"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Пациентов в день:</label>
+        <input
+          type="number"
+          value={attributes.patientsPerDay || ''}
+          onChange={(e) => onChange('patientsPerDay', e.target.value)}
+          placeholder="20"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Рейтинг (0-5):</label>
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          max="5"
+          value={attributes.rating || ''}
+          onChange={(e) => onChange('rating', e.target.value)}
+          placeholder="4.5"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Биография:</label>
+        <textarea
+          rows="3"
+          value={attributes.biography || ''}
+          onChange={(e) => onChange('biography', e.target.value)}
+          placeholder="Краткая биография врача..."
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Сертификаты (через запятую):</label>
+        <input
+          type="text"
+          value={attributes.certificates?.join(', ') || ''}
+          onChange={(e) => onChange('certificates', e.target.value.split(',').map(s => s.trim()).filter(s => s))}
+          placeholder="Терапия, Кардиология, УЗИ"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Языки (через запятую):</label>
+        <input
+          type="text"
+          value={attributes.languages?.join(', ') || ''}
+          onChange={(e) => onChange('languages', e.target.value.split(',').map(s => s.trim()).filter(s => s))}
+          placeholder="Русский, Английский"
+        />
+      </div>
+    </div>
+  );
   
   if (loading) {
     return (
@@ -275,21 +494,10 @@ const Detail = ({ employees, onUpdate, onDelete, availableRanks, currentUser, is
               </div>
             </div>
             
-            <div className="info-section">
-              <h3>Статистика</h3>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-value">{employees?.length || 0}</div>
-                  <div className="stat-label">Всего сотрудников</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-value">{
-                    employees?.filter(e => e.position === employee.position).length || 0
-                  }</div>
-                  <div className="stat-label">С такой же должностью</div>
-                </div>
-              </div>
-            </div>
+            {/* Показываем атрибуты только для врачей */}
+            {employee.role === 'doctor' && (
+              <DoctorAttributesView attributes={employee.doctorAttributes || doctorAttributes} />
+            )}
           </div>
         </div>
         
@@ -376,6 +584,14 @@ const Detail = ({ employees, onUpdate, onDelete, availableRanks, currentUser, is
             </div>
             {rangError && <div className="error-message">{rangError}</div>}
           </div>
+          
+          {/* Поля для атрибутов врача (только если роль doctor) */}
+          {employee.role === 'doctor' && (
+            <DoctorAttributesEdit 
+              attributes={doctorAttributes} 
+              onChange={handleAttributeChange} 
+            />
+          )}
           
           <div className="button-group">
             <button type="submit" className="btn-primary">💾 Сохранить изменения</button>
